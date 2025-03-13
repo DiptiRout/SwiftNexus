@@ -11,7 +11,7 @@ import SwiftUI
 ///
 @MainActor
 @Observable
-public final class NavigationRouter<MainRoute: Route> {
+public final class NavigationRouter<MainRoute: Route>: Sendable {
     /// The navigation stack path managed by SwiftUI NavigationStack
     public var path = NavigationPath()
     
@@ -80,9 +80,7 @@ public final class NavigationRouter<MainRoute: Route> {
         guard !routes.isEmpty else { return }
         
         // Update navigation stack on main thread
-        DispatchQueue.main.async {
-            self.navigate(routes)
-        }
+        self.navigate(routes)
     }
     
     /// Private method to execute deep link navigation sequence

@@ -9,57 +9,79 @@ import Testing
 import SwiftUI
 @testable import SwiftNexus
 
+@MainActor
 struct NavigationTests {
     // MARK: - Basic Navigation Tests
     
-    @Test func initialNavigationStateIsEmpty() async throws {
-        let router = await NavigationRouter<TestRoute>()
-        await #expect(router.path.isEmpty)
+    @Test func initialNavigationStateIsEmpty() {
+        let router = NavigationRouter<TestRoute>()
+        #expect(router.path.isEmpty)
     }
     
-    @Test func pushAddsToNavigationPath() async throws {
-        let router = await NavigationRouter<TestRoute>()
-        await router.push(.settings)
-        await #expect(router.path.count == 1)
+    @Test func pushAddsToNavigationPath() {
+        let router = NavigationRouter<TestRoute>()
+        router.push(.settings)
+        #expect(router.path.count == 1)
     }
     
-    @Test func popRemovesFromNavigationPath() async throws {
-        let router = await NavigationRouter<TestRoute>()
-        await router.push(.settings)
-        await router.pop()
-        await #expect(router.path.isEmpty)
+    @Test func pushToIndex() {
+        let router = NavigationRouter<TestRoute>()
+        router.push(.home)
+        router.push(.settings)
+        #expect(router.path.count == 2)
+        router.popTo(index: 0)
+        #expect(router.path.count == 1)
+    }
+    
+    @Test func popRemovesFromNavigationPath() {
+        let router = NavigationRouter<TestRoute>()
+        router.push(.settings)
+        router.pop()
+        #expect(router.path.isEmpty)
     }
     
     // MARK: - Deep Link Tests
     
-    @Test func validDeepLinkUpdatesPath() async throws {
-        let router = await NavigationRouter<TestRoute>()
-        let url = try #require(URL(string: "testscheme://profile/123"))
-        
-        await router.handleDeepLink(url)
-        await #expect(router.path.count == 1)
+    @Test func validDeepLinkUpdatesPath() {
+        let router = NavigationRouter<TestRoute>()
+        do {
+            let url = try #require(URL(string: "testscheme://profile/123"))
+            
+            router.handleDeepLink(url)
+            #expect(router.path.count == 1)
+        } catch {
+            #expect(Bool(false))
+        }
     }
     
-    @Test func invalidDeepLinkDoesntModifyPath() async throws {
-        let router = await NavigationRouter<TestRoute>()
-        let url = try #require(URL(string: "invalid://url"))
-        
-        await router.handleDeepLink(url)
-        await #expect(router.path.isEmpty)
+    @Test func invalidDeepLinkDoesntModifyPath() {
+        let router = NavigationRouter<TestRoute>()
+        do {
+            let url = try #require(URL(string: "invalid://url"))
+            
+            router.handleDeepLink(url)
+            #expect(router.path.isEmpty)
+        } catch {
+            #expect(Bool(false))
+        }
     }
     
     // MARK: - Route Parsing Tests
     
-    @Test func routeParsingValidProfileURL() async throws {
+    @Test func routeParsingValidProfileURL() {
         let components = ["profile", "456"]
         let result = TestRoute.parse(from: components, startingAt: 0)
-        let (route, consumed) = try #require(result)
-        
-        #expect(route == .profile(id: "456"))
-        #expect(consumed == 2)
+        do {
+            let (route, consumed) = try #require(result)
+            
+            #expect(route == .profile(id: "456"))
+            #expect(consumed == 2)
+        } catch {
+            #expect(Bool(false))
+        }
     }
     
-    @Test func routeParsingInvalidURLReturnsNil() async throws {
+    @Test func routeParsingInvalidURLReturnsNil() {
         let components = ["invalid", "component"]
         let result = TestRoute.parse(from: components, startingAt: 0)
         #expect(result == nil)
